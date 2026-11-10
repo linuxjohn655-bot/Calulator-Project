@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101010">
+<title>Calculator Pro</title>
+<style>
+:root{--bg:#101010;--panel:#191919;--key:#242424;--text:#f5f5f5;--muted:#a6a6a6;--accent:#e7e7e7;--line:#333;--danger:#ff7777}
+[data-theme="light"]{--bg:#f3f3f3;--panel:#fff;--key:#e9e9e9;--text:#171717;--muted:#666;--accent:#171717;--line:#ddd;--danger:#c62828}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh;transition:.2s}
+button,input{font:inherit}button{cursor:pointer;border:0;color:var(--text)}
+.app{width:min(100%,520px);margin:auto;padding:22px 16px 40px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.brand{font-weight:750;letter-spacing:.3px;font-size:20px}.brand span{color:var(--muted);font-weight:400}
+.actions{display:flex;gap:8px}.small{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px}
+.display{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;min-height:142px;display:flex;flex-direction:column;justify-content:flex-end}
+.expression{text-align:right;color:var(--muted);min-height:26px;overflow-wrap:anywhere}.result{text-align:right;font-size:clamp(36px,9vw,52px);font-weight:650;overflow-wrap:anywhere}
+.modebar{display:flex;gap:8px;margin:12px 0}.mode{flex:1;padding:11px;border-radius:12px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}.mode.active{background:var(--accent);color:var(--bg);font-weight:700}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.key{height:62px;border-radius:16px;background:var(--key);font-size:20px;font-weight:550}.key.op{background:var(--panel);border:1px solid var(--line)}.key.equal{background:var(--accent);color:var(--bg)}.key.clear{color:var(--danger)}
+.science{display:none;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}.science.show{display:grid}.science .key{height:48px;font-size:15px;border-radius:13px}
+.bottom{display:flex;justify-content:space-between;align-items:center;margin-top:16px;color:var(--muted);font-size:13px}
+.history{margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px}.history-head{display:flex;justify-content:space-between;align-items:center}.history h3{margin:0;font-size:15px}.history-list{display:grid;gap:10px;margin-top:13px}.history-item{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:14px}.history-item strong{color:var(--text);font-weight:600}.empty{color:var(--muted);font-size:13px;margin:12px 0 2px}
+.overlay{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;padding:18px;z-index:5}.overlay.show{display:flex}.modal{width:min(100%,420px);background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 20px 80px #0005}.step-top{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}.progress{height:5px;background:var(--key);border-radius:10px;margin:13px 0 22px;overflow:hidden}.progress span{display:block;height:100%;background:var(--accent);width:25%;transition:.2s}.modal h2{font-size:23px;margin:0 0 9px}.modal p{color:var(--muted);line-height:1.55;margin:0 0 20px}.modal-actions{display:flex;justify-content:space-between;gap:10px}.primary{background:var(--accent);color:var(--bg);font-weight:700;border-radius:12px;padding:11px 18px}.secondary{background:var(--key);border-radius:12px;padding:11px 16px}
+@media(max-width:380px){.app{padding:15px 11px}.key{height:56px}.science .key{height:44px}.actions .small{padding:8px 9px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand">CALCULATOR <span>PRO</span></div><div class="actions"><button class="small" id="themeBtn" aria-label="Switch theme">☼ Light</button><button class="small" id="helpBtn">Guide</button></div></header>
+<section class="display" aria-live="polite"><div class="expression" id="expression"></div><div class="result" id="result">0</div></section>
+<div class="modebar"><button class="mode active" id="standardBtn">Standard</button><button class="mode" id="nerdBtn">🤓 Nerd mode</button></div>
+<div class="science" id="scienceKeys">
+<button class="key op" data-fn="sin">sin</button><button class="key op" data-fn="cos">cos</button><button class="key op" data-fn="tan">tan</button><button class="key op" data-fn="log">log</button>
+<button class="key op" data-fn="ln">ln</button><button class="key op" data-fn="sqrt">√</button><button class="key op" data-val="^">xʸ</button><button class="key op" data-val="(">(</button>
+<button class="key op" data-val=")">)</button><button class="key op" data-val="π">π</button><button class="key op" data-val="e">e</button><button class="key op" data-val="!">n!</button>
+</div>
+<div class="keys" id="keys">
+<button class="key clear" data-action="clear">AC</button><button class="key op" data-action="delete">⌫</button><button class="key op" data-val="%">%</button><button class="key op" data-val="÷">÷</button>
+<button class="key" data-val="7">7</button><button class="key" data-val="8">8</button><button class="key" data-val="9">9</button><button class="key op" data-val="×">×</button>
+<button class="key" data-val="4">4</button><button class="key" data-val="5">5</button><button class="key" data-val="6">6</button><button class="key op" data-val="-">−</button>
+<button class="key" data-val="1">1</button><button class="key" data-val="2">2</button><button class="key" data-val="3">3</button><button class="key op" data-val="+">+</button>
+<button class="key" data-val="0">0</button><button class="key" data-val=".">.</button><button class="key op" data-action="sign">±</button><button class="key equal" data-action="equals">=</button>
+</div>
+<div class="bottom"><span id="deviceLabel">Device: detecting…</span><span>Calculations stay on this device</span></div>
+<section class="history"><div class="history-head"><h3>Recent calculations</h3><button class="small" id="clearHistory">Clear</button></div><div class="history-list" id="historyList"><div class="empty">Your calculations will appear here.</div></div></section>
+</div>
+<div class="overlay" id="guideOverlay" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+<div class="modal"><div class="step-top"><span id="stepName">WELCOME</span><span id="stepCount">1 / 4</span></div><div class="progress"><span id="progressFill"></span></div><h2 id="guideTitle">Welcome to Calculator Pro</h2><p id="guideText"></p><div class="modal-actions"><button class="secondary" id="skipGuide">Skip</button><div style="display:flex;gap:8px"><button class="secondary" id="backStep">Back</button><button class="primary" id="nextStep">Next</button></div></div></div>
+</div>
+<script>
+(() => {
+const $=id=>document.getElementById(id);
+let expression="",answer="0",nerd=false,step=0;
+const steps=[
+["WELCOME","Welcome to Calculator Pro","A simple calculator with two themes, a standard layout and an extra Nerd mode for advanced maths."],
+["QUICK TOUR","How to use it","Tap the number and operator keys, then press =. AC clears everything, ⌫ removes the last character, and the history section keeps your latest calculations."],
+["NERD MODE","Go beyond basic maths","Choose 🤓 Nerd mode for sin, cos, tan, logarithms, roots, powers, π, e and factorials. Trigonometry uses degrees."],
+["DEVICE SETUP","Made for your device","We detected a "+deviceType()+". The layout adjusts automatically: use touch-friendly keys on phones and tablets, or click the keys with a mouse/trackpad on computers. You can switch between black and white mode at any time."]
+];
+function deviceType(){const ua=navigator.userAgent||"";if(/ipad|tablet|playbook|silk/i.test(ua)||(/android/i.test(ua)&&!/mobile/i.test(ua)))return"tablet";if(/mobile|iphone|ipod|android/i.test(ua))return"phone";return"computer"}
+$("deviceLabel").textContent="Device: "+deviceType();
+function showGuide(){step=0;renderStep();$("guideOverlay").classList.add("show")}
+function renderStep(){const s=steps[step];$("stepName").textContent=s[0];$("stepCount").textContent=(step+1)+" / 4";$("guideTitle").textContent=s[1];$("guideText").textContent=s[2];$("progressFill").style.width=((step+1)*25)+"%";$("backStep").style.visibility=step===0?"hidden":"visible";$("nextStep").textContent=step===3?"Start calculating":"Next"}
+function closeGuide(){$("guideOverlay").classList.remove("show");localStorage.setItem("calcGuideSeen","yes")}
+$("nextStep").onclick=()=>{if(step<3){step++;renderStep()}else closeGuide()};
+$("backStep").onclick=()=>{if(step>0){step--;renderStep()}};
+$("skipGuide").onclick=closeGuide;$("helpBtn").onclick=showGuide;
+if(!localStorage.getItem("calcGuideSeen"))showGuide();
+function update(){$("expression").textContent=expression;$("result").textContent=answer}
+function add(v){expression+=v;answer=expression||"0";update()}
+function factorial(n){if(n<0||!Number.isInteger(n)||n>170)throw Error("Factorial needs a whole number from 0 to 170");let r=1;for(let i=2;i<=n;i++)r*=i;return r}
+function safeEval(src){
+let s=src.replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/π/g,"Math.PI").replace(/\be\b/g,"Math.E").replace(/\^/g,"**").replace(/(\d+(?:\.\d+)?)%/g,"($1/100)");
+s=s.replace(/(\d+(?:\.\d+)?)!/g,"factorial($1)");
+if(!/^[0-9+\-*/().\sA-Za-z]*$/.test(s)||/(?:Math\.(?!PI|E)|[A-Za-z]/.test(s.replace(/Math\.PI|Math\.E|factorial/g,"")))throw Error("Invalid expression");
+const value=Function("factorial","return ("+s+")")(factorial);
+if(!Number.isFinite(value))throw Error("Math error");return value;
+}
+function calculate(){try{const val=safeEval(expression);const rounded=Number.parseFloat(val.toPrecision(12));answer=String(rounded);addHistory(expression,answer);expression=answer;update()}catch(e){answer="Error";update()}}
+function addHistory(q,a){let h=JSON.parse(localStorage.getItem("calcHistory")||"[]");h.unshift({q,a});h=h.slice(0,8);localStorage.setItem("calcHistory",JSON.stringify(h));renderHistory()}
+function renderHistory(){const h=JSON.parse(localStorage.getItem("calcHistory")||"[]");$("historyList").innerHTML=h.length?h.map(x=>`<div class="history-item"><span>${escapeHTML(x.q)} =</span><strong>${escapeHTML(x.a)}</strong></div>`).join(""):'<div class="empty">Your calculations will appear here.</div>'}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("keys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const a=b.dataset.action,v=b.dataset.val;if(a==="clear"){expression="";answer="0";update()}else if(a==="delete"){expression=expression.slice(0,-1);answer=expression||"0";update()}else if(a==="equals")calculate();else if(a==="sign"){expression=expression.startsWith("-")?expression.slice(1):"-("+expression+")";answer=expression;update()}else if(v)add(v)});
+$("scienceKeys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.fn){const fn=b.dataset.fn;try{const x=safeEval(expression||"0");let y;if(fn==="sqrt")y=Math.sqrt(x);if(fn==="sin")y=Math.sin(x*Math.PI/180);if(fn==="cos")y=Math.cos(x*Math.PI/180);if(fn==="tan")y=Math.tan(x*Math.PI/180);if(fn==="log")y=Math.log10(x);if(fn==="ln")y=Math.log(x);if(!Number.isFinite(y))throw Error();const old=expression;expression=String(Number(y.toPrecision(12)));answer=expression;addHistory(fn+"("+old+")",answer);update()}catch{answer="Error";update()}}else if(b.dataset.val)add(b.dataset.val)});
+$("standardBtn").onclick=()=>setNerd(false);$("nerdBtn").onclick=()=>setNerd(true);
+function setNerd(v){nerd=v;$("scienceKeys").classList.toggle("show",v);$("standardBtn").classList.toggle("active",!v);$("nerdBtn").classList.toggle("active",v)}
+$("themeBtn").onclick=()=>{const light=document.documentElement.dataset.theme!=="light";document.documentElement.dataset.theme=light?"light":"dark";$("themeBtn").textContent=light?"● Dark":"☼ Light";localStorage.setItem("calcTheme",light?"light":"dark")};
+const savedTheme=localStorage.getItem("calcTheme");if(savedTheme==="light"){document.documentElement.dataset.theme="light";$("themeBtn").textContent="● Dark"}
+$("clearHistory").onclick=()=>{localStorage.removeItem("calcHistory");renderHistory()};
+document.addEventListener("keydown",e=>{if($("guideOverlay").classList.contains("show"))return;if(/^[0-9.]$/.test(e.key))add(e.key);else if(["+","-","*","/","(",")","%"].includes(e.key))add(({ "*":"×","/":"÷"}[e.key]||e.key));else if(e.key==="Enter"||e.key==="="){e.preventDefault();calculate()}else if(e.key==="Backspace"){$("keys").querySelector('[data-action="delete"]').click()}else if(e.key==="Escape"){$("keys").querySelector('[data-action="clear"]').click()}});
+renderHistory();
+})();
+</script>
+</body>
+</html>
